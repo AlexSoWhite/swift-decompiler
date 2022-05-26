@@ -9,9 +9,11 @@
 #include <iblessing-core/v2/memory/memory.hpp>
 #include <fstream>
 #include <sstream>
+#include "../swift/include/swift/Demangling/Demangle.h"
 
 using namespace std;
 using namespace iblessing;
+using namespace swift;
 
 #define UnicornStackTopAddr      0x300000000
 
@@ -137,8 +139,9 @@ void Finder::find_functions(const string & path) {
         Symbol *sym = symtab->getSymbolByAddress(addr);
 
         if (sym && sym->name.size() > 0) {
-            printf("%s:\n", sym->name.c_str());
-            fprintf(file, "%s\n", sym->name.c_str());
+            string demangled = Demangle::demangleSymbolAsString(sym->name.c_str(), strlen(sym->name.c_str()), Demangle::DemangleOptions());
+            cout << demangled << endl;
+            fprintf(file, "%s\n", demangled.c_str());
         }
 
         if (strcmp(insn->mnemonic, "bl") == 0 ||
@@ -242,8 +245,9 @@ void Finder::find_loops(const string &path) {
     for (auto code : codes) {
         Symbol *sym = symtab->getSymbolByAddress(code->address);
         if (sym && sym->name.size() > 0) {
-            printf("%s:\n", sym->name.c_str());
-            fprintf(file, "%s\n", sym->name.c_str());
+            string demangled = Demangle::demangleSymbolAsString(sym->name.c_str(), strlen(sym->name.c_str()), Demangle::DemangleOptions());
+            cout << demangled << endl;
+            fprintf(file, "%s\n", demangled.c_str());
         }
         if (find(start_addresses.begin(), start_addresses.end(), code->address) != start_addresses.end()) {
             output_start(code);
@@ -318,11 +322,12 @@ void Finder::find_constants(const string &path, uint64_t value) {
         uc_emu_start(uc, addr, addr + 4, 0, 1);
         uc_emu_stop(uc);
 
-//        Symbol *sym = symtab->getSymbolByAddress(addr);
-//        if (sym && sym->name.size() > 0) {
-//            printf("%s:\n", sym->name.c_str());
-//            fprintf(file, "%s\n", sym->name.c_str());
-//        }
+        Symbol *sym = symtab->getSymbolByAddress(addr);
+        if (sym && sym->name.size() > 0) {
+            string demangled = Demangle::demangleSymbolAsString(sym->name.c_str(), strlen(sym->name.c_str()), Demangle::DemangleOptions());
+            cout << demangled << endl;
+            fprintf(file, "%s\n", demangled.c_str());
+        }
 
         if (extract_const_from_opstr(insn->op_str, value)) {
             output_found(insn);
@@ -400,8 +405,9 @@ void Finder::find_variables(const string &path) {
 
         Symbol *sym = symtab->getSymbolByAddress(addr);
         if (sym && sym->name.size() > 0) {
-            printf("%s:\n", sym->name.c_str());
-            fprintf(file, "%s\n", sym->name.c_str());
+            string demangled = Demangle::demangleSymbolAsString(sym->name.c_str(), strlen(sym->name.c_str()), Demangle::DemangleOptions());
+            cout << demangled << endl;
+            fprintf(file, "%s\n", demangled.c_str());
         }
 
         if (
@@ -521,8 +527,9 @@ void Finder::find_conditionals(const string &path) {
     for (auto code : codes) {
         Symbol *sym = symtab->getSymbolByAddress(code->address);
         if (sym && sym->name.size() > 0) {
-            printf("%s:\n", sym->name.c_str());
-            fprintf(file, "%s\n", sym->name.c_str());
+            string demangled = Demangle::demangleSymbolAsString(sym->name.c_str(), strlen(sym->name.c_str()), Demangle::DemangleOptions());
+            cout << demangled << endl;
+            fprintf(file, "%s\n", demangled.c_str());
         }
         if (find(cond_addresses.begin(), cond_addresses.end(), code->address) != cond_addresses.end()) {
             output_start(code);
