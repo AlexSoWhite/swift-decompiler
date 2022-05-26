@@ -17,19 +17,35 @@ using namespace swift;
 
 #define UnicornStackTopAddr      0x300000000
 
-void output(cs_insn *insn) {
-    cout << StringUtils::format("%016lx      %-8s %s\n", insn->address, insn->mnemonic, insn->op_str);
+void output(cs_insn *insn, const shared_ptr<SymbolTable> & symtab) {
+    Symbol *sym = symtab->getSymbolByAddress(insn->address);
+    string demangled;
+    if (sym && !sym->name.empty()) {
+        demangled = Demangle::demangleSymbolAsString(
+                sym->name.c_str(),
+                strlen(sym->name.c_str()),
+                Demangle::DemangleOptions()
+        );
+    }
+    if (strcmp(insn->mnemonic, "bl") == 0) {
+        cout << StringUtils::format("%016lx      %-8s %s\n", insn->address, insn->mnemonic, demangled.c_str());
+    } else {
+        if (demangled != "") {
+            cout << demangled << endl;
+        }
+        cout << StringUtils::format("%016lx      %-8s %s\n", insn->address, insn->mnemonic, insn->op_str);
+    }
 }
 
-void output_found(cs_insn *insn) {
+void output_found(cs_insn *insn, const shared_ptr<SymbolTable> & symtab) {
     cout << termcolor::green;
-    cout << StringUtils::format("%016lx      %-8s %s\n", insn->address, insn->mnemonic, insn->op_str);
+    output(insn, symtab);
     cout << termcolor::reset;
 }
 
-void output_start(cs_insn *insn) {
+void output_start(cs_insn *insn, const shared_ptr<SymbolTable> & symtab) {
     cout << termcolor::cyan;
-    cout << StringUtils::format("%016lx      %-8s %s\n", insn->address, insn->mnemonic, insn->op_str);
+    output(insn, symtab);
     cout << termcolor::reset;
 }
 
@@ -147,9 +163,9 @@ void Finder::find_functions(const string & path) {
         if (strcmp(insn->mnemonic, "bl") == 0 ||
             strncmp(insn->mnemonic, "bl.", 2) == 0
         ) {
-            output_found(insn);
+            output_found(insn, symtab);
         } else {
-            output(insn);
+            output(insn, symtab);
         }
 
         last_mnemonic = insn->mnemonic;
@@ -243,18 +259,12 @@ void Finder::find_loops(const string &path) {
     }
 
     for (auto code : codes) {
-        Symbol *sym = symtab->getSymbolByAddress(code->address);
-        if (sym && sym->name.size() > 0) {
-            string demangled = Demangle::demangleSymbolAsString(sym->name.c_str(), strlen(sym->name.c_str()), Demangle::DemangleOptions());
-            cout << demangled << endl;
-            fprintf(file, "%s\n", demangled.c_str());
-        }
         if (find(start_addresses.begin(), start_addresses.end(), code->address) != start_addresses.end()) {
-            output_start(code);
+            output_start(code, symtab);
         } else if (find(end_addresses.begin(), end_addresses.end(), code->address) != end_addresses.end()) {
-            output_found(code);
+            output_found(code, symtab);
         } else {
-            output(code);
+            output(code, symtab);
         }
     }
 }
@@ -322,17 +332,10 @@ void Finder::find_constants(const string &path, uint64_t value) {
         uc_emu_start(uc, addr, addr + 4, 0, 1);
         uc_emu_stop(uc);
 
-        Symbol *sym = symtab->getSymbolByAddress(addr);
-        if (sym && sym->name.size() > 0) {
-            string demangled = Demangle::demangleSymbolAsString(sym->name.c_str(), strlen(sym->name.c_str()), Demangle::DemangleOptions());
-            cout << demangled << endl;
-            fprintf(file, "%s\n", demangled.c_str());
-        }
-
         if (extract_const_from_opstr(insn->op_str, value)) {
-            output_found(insn);
+            output_found(insn, symtab);
         } else {
-            output(insn);
+            output(insn, symtab);
         }
 
         last_mnemonic = insn->mnemonic;
@@ -403,22 +406,15 @@ void Finder::find_variables(const string &path) {
         uc_emu_start(uc, addr, addr + 4, 0, 1);
         uc_emu_stop(uc);
 
-        Symbol *sym = symtab->getSymbolByAddress(addr);
-        if (sym && sym->name.size() > 0) {
-            string demangled = Demangle::demangleSymbolAsString(sym->name.c_str(), strlen(sym->name.c_str()), Demangle::DemangleOptions());
-            cout << demangled << endl;
-            fprintf(file, "%s\n", demangled.c_str());
-        }
-
         if (
             strcmp(insn->mnemonic, "mov") == 0 ||
             strcmp(insn->mnemonic, "str") == 0 ||
             strcmp(insn->mnemonic, "ldr") == 0
         ) {
             cout << insn->detail->arm64.operands->reg;
-            output_found(insn);
+            output_found(insn, symtab);
         } else {
-            output(insn);
+            output(insn, symtab);
         }
 
         last_mnemonic = insn->mnemonic;
@@ -525,18 +521,12 @@ void Finder::find_conditionals(const string &path) {
         addr += direction;
     }
     for (auto code : codes) {
-        Symbol *sym = symtab->getSymbolByAddress(code->address);
-        if (sym && sym->name.size() > 0) {
-            string demangled = Demangle::demangleSymbolAsString(sym->name.c_str(), strlen(sym->name.c_str()), Demangle::DemangleOptions());
-            cout << demangled << endl;
-            fprintf(file, "%s\n", demangled.c_str());
-        }
         if (find(cond_addresses.begin(), cond_addresses.end(), code->address) != cond_addresses.end()) {
-            output_start(code);
+            output_start(code, symtab);
         } else if (find(branch_addresses.begin(), branch_addresses.end(), code->address) != branch_addresses.end()) {
-            output_found(code);
+            output_found(code, symtab);
         } else {
-            output(code);
+            output(code, symtab);
         }
     }
 }
