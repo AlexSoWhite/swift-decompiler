@@ -10,7 +10,6 @@ using namespace std;
 enum regime {
     FUNCTIONS,
     LOOPS,
-    CONDITIONALS,
     CONSTANTS,
     CLASSES,
     STRUCTURES
@@ -35,8 +34,6 @@ int main(int argc, const char **argv) {
         r = FUNCTIONS;
     } else if (strcmp(argv[1], "-loops") == 0) {
         r = LOOPS;
-    } else if (strcmp(argv[1], "-conditionals") == 0) {
-        r = CONDITIONALS;
     } else if (strcmp(argv[1], "-constants") == 0) {
         r = CONSTANTS;
     } else if (strcmp(argv[1], "-class") == 0) {
@@ -44,7 +41,7 @@ int main(int argc, const char **argv) {
     } else if (strcmp(argv[1], "-struct") == 0) {
         r = STRUCTURES;
     } else {
-        printf("available regimes are -functions, -variables, -loops, -conditionals or -constants");
+        printf("available regimes are -functions, -loops, -class, -struct or -constants");
     }
 
     string name;
@@ -59,9 +56,6 @@ int main(int argc, const char **argv) {
                 Binary(loop, binaryReader.getSymtab()).printBinary();
                 cout << endl << endl;
             }
-            break;
-        case CONDITIONALS:
-            //Finder::find_conditionals(filePath);
             break;
         case CONSTANTS:
             uint64_t value;
