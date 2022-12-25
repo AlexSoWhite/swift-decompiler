@@ -48,44 +48,44 @@ int main(int argc, const char **argv) {
     }
 
     string name;
-//    switch (r) {
-//        case FUNCTIONS:
-//            cin>> name;
-//            Binary(binary.search_for_function(name), binaryReader.getSymtab()).printBinary();
-//            break;
-//        case LOOPS:
-//            for (const auto& loop : binary.search_for_loops()) {
-//                cout << "next loop: " << endl;
-//                Binary(loop, binaryReader.getSymtab()).printBinary();
-//                cout << endl << endl;
-//            }
-//            break;
-//        case CONDITIONALS:
-//            //Finder::find_conditionals(filePath);
-//            break;
-//        case CONSTANTS:
-//            uint64_t value;
-//            if (argc != 4) {
-//                printf("usage: ./SwiftDecompiler -constants [binary] [hex-value]\n");
-//                break;
-//            } else {
-//                stringstream ss;
-//                ss << argv[3];
-//                ss >> std::hex >> value;
-//            }
-//            cout << endl << "your value: " << endl;
-//            Binary(binary.search_for_constants(value), binaryReader.getSymtab()).printBinary();
-//            cout << endl;
-//            break;
-//        case CLASSES:
-//            cin >> name;
-//            Binary(binary.search_for_class(name), binaryReader.getSymtab()).printBinary();
-//            break;
-//        case STRUCTURES:
-//            cin >> name;
-//            Binary(binary.search_for_structure(name), binaryReader.getSymtab()).printBinary();
-//            break;
-//    }
+    switch (r) {
+        case FUNCTIONS:
+            cin>> name;
+            Binary(binary.search_for_function(name), binaryReader.getSymtab()).printBinary();
+            break;
+        case LOOPS:
+            for (const auto& loop : binary.search_for_loops()) {
+                cout << "next loop: " << endl;
+                Binary(loop, binaryReader.getSymtab()).printBinary();
+                cout << endl << endl;
+            }
+            break;
+        case CONDITIONALS:
+            //Finder::find_conditionals(filePath);
+            break;
+        case CONSTANTS:
+            uint64_t value;
+            if (argc != 4) {
+                printf("usage: ./SwiftDecompiler -constants [binary] [hex-value]\n");
+                break;
+            } else {
+                stringstream ss;
+                ss << argv[3];
+                ss >> std::hex >> value;
+            }
+            cout << endl << "your value: " << endl;
+            Binary(binary.search_for_constants(value), binaryReader.getSymtab()).printBinary();
+            cout << endl;
+            break;
+        case CLASSES:
+            cin >> name;
+            Binary(binary.search_for_class(name), binaryReader.getSymtab()).printBinary();
+            break;
+        case STRUCTURES:
+            cin >> name;
+            Binary(binary.search_for_structure(name), binaryReader.getSymtab()).printBinary();
+            break;
+    }
 
     return 0;
 }
