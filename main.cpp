@@ -1,6 +1,5 @@
 #include "cstring"
-#include "BinaryReader/BinaryReader.h"
-#include "Binary/Binary.h"
+#include "include/SwiftDecompiler.h"
 #include <sstream>
 
 #define UnicornStackTopAddr      0x300000000
