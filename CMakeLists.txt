@@ -2,14 +2,23 @@ cmake_minimum_required(VERSION 3.23)
 project(SwiftDecompiler DESCRIPTION "Simple swift decompiler")
 include(GNUInstallDirs)
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS -O2)
+set(CMAKE_CXX_FLAGS -Ofast)
 
 add_library(SwiftDecompiler SHARED swift
         src/SwiftDecompiler.cpp
         include/SwiftDecompiler.h
 )
+
+add_executable(decompile 
+	swift
+	main.cpp
+	src/SwiftDecompiler.cpp
+	include/SwiftDecompiler.h
+)
+
 find_package(LLVM REQUIRED CONFIG)
 target_link_libraries(SwiftDecompiler PUBLIC iblessing-core SwiftDemangle LLVMSupport)
+target_link_libraries(decompile PUBLIC iblessing-core SwiftDemangle LLVMSupport)
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 

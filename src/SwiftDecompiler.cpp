@@ -11,6 +11,7 @@
 #include "../swift/include/swift/Demangling/Demangle.h"
 #include "../include/SwiftDecompiler.h"
 #include <thread>
+#include <iomanip>
 
 using namespace iblessing;
 using namespace std;
@@ -225,7 +226,6 @@ void Binary::printBinary(std::ostream& out) {
 void logDebug(const std::string&);
 void readSector(
         std::shared_ptr<iblessing::VirtualMemoryV2> &,
-        uc_engine* &,
         csh &,
         std::shared_ptr<iblessing::SymbolTable> &,
         std::vector<cs_insn *> &,
@@ -251,18 +251,21 @@ BinaryReader::BinaryReader(const std::string& path) {
     logDebug("memory created");
 
     // setup engine
-    uc_engine *uc = memory->virtualMemory->getEngine();
-    uint64_t unicorn_sp_start = UnicornStackTopAddr;
-    uc_reg_write(uc, UC_ARM64_REG_SP, &unicorn_sp_start);
-    // set FPEN on CPACR_EL1
-    uint32_t fpen;
-    uc_reg_read(uc, UC_ARM64_REG_CPACR_EL1, &fpen);
-    fpen |= 0x300000; // set FPEN bit
-    uc_reg_write(uc, UC_ARM64_REG_CPACR_EL1, &fpen);
+//    uc_engine *uc = memory->virtualMemory->getEngine();
+//    uint64_t unicorn_sp_start = UnicornStackTopAddr;
+//    uc_reg_write(uc, UC_ARM64_REG_SP, &unicorn_sp_start);
+//    // set FPEN on CPACR_EL1
+//    uint32_t fpen;
+//    uc_reg_read(uc, UC_ARM64_REG_CPACR_EL1, &fpen);
+//    fpen |= 0x300000; // set FPEN bit
+//    uc_reg_write(uc, UC_ARM64_REG_CPACR_EL1, &fpen);
+//    logDebug("engine setted up");
 
     std::shared_ptr<VirtualMemoryV2> vm2 = memory->virtualMemory;
     this->symtab = macho->context->symtab;
+    logDebug("symbol table built");
     this->stringtab = macho->context->strtab;
+    logDebug("string table built");
 
     // dis all
     csh handle;
@@ -274,20 +277,10 @@ BinaryReader::BinaryReader(const std::string& path) {
     uint64_t addr = textSect->addr;
     uint64_t end = textSect->addr + textSect->size;
 
-    std::vector<std::thread> threads;
-    uint64_t thread_amount = std::thread::hardware_concurrency();
-    threads.reserve(thread_amount);
-
-    std::vector<uint64_t> steps;
-    uint64_t step = textSect->size / (thread_amount - 1);
-    for (int i = 0; i < thread_amount - 1; i ++) {
-        steps.push_back(step);
-    }
-    steps.push_back(textSect->size - step * (thread_amount - 1));
+    logDebug("virtual memory created");
 
     readSector(
             std::ref(vm2),
-            std::ref(uc),
             std::ref(handle),
             std::ref(symtab),
             std::ref(codes),
@@ -299,7 +292,6 @@ BinaryReader::BinaryReader(const std::string& path) {
 
 void readSector(
         std::shared_ptr<iblessing::VirtualMemoryV2> &memory,
-        uc_engine* &uc,
         csh &handle,
         std::shared_ptr<iblessing::SymbolTable> &symtab,
         std::vector<cs_insn *> &codes_container,
@@ -308,8 +300,9 @@ void readSector(
         uint64_t end_addr
 ) {
     uint64_t addr = start_addr;
+    uint64_t size = end_addr - start_addr;
     while (addr < end_addr) {
-        //std::cout << addr << std::endl;
+        std::cout << std::setw(3) << (addr - start_addr)*100/size << "%\r";
         bool success;
         uint32_t code = memory->read32(addr, &success);
         if (!success) {
@@ -325,8 +318,8 @@ void readSector(
             continue;
         }
 
-        uc_emu_start(uc, addr, addr + 4, 0, 1);
-        uc_emu_stop(uc);
+//        uc_emu_start(uc, addr, addr + 4, 0, 1);
+//        uc_emu_stop(uc);
 
         iblessing::Symbol *sym = symtab->getSymbolByAddress(addr);
 
